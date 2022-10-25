@@ -1,0 +1,94 @@
+#include"bme280.h"
+#include<string>
+#include<iostream>
+#include"libSensor.h"
+#include <fcntl.h>
+#include <unistd.h>
+
+#include<errno.h>
+#include<stdio.h>
+#include <cstring>
+int main(){
+	int fd;
+
+
+
+	while(true)
+	{
+	char req[3];
+
+	fd = serialOpen ("/dev/ttyAMA0", 9600);
+
+        if(fd < 0){
+                }
+
+        if (wiringPiSetup () == -1)
+         {
+                std::cout<<"\n can't set up wiringpi "; 
+
+        //     fprintf (stdout, "Unable to start wiringPi: %s\n",perror (errno)) ;
+         }
+
+
+
+	if ( req[0]=='G' && req[1]=='E' && req[2]=='T')
+	{
+	
+	std::string vals= get_measurements();
+	std::string vals1=get_acc();
+	std::string all_vals=vals + vals1;
+	std::vector<std::string> v=format_data(all_vals);
+	
+	std::cout<<"\n"<<all_vals<<"\n";
+	//1=>2  2=>2 3=>2 4=>2  5=>2 6=>2 7=>4 8=>4 9=>6 10=>2 11=>2 12=>2
+	int numbers[]={5,6,7,2,2,2};
+	for(int i =0 ;i<v.size();i++)
+	{
+//		if(v[i].length()<numbers[i])
+//		{
+			while(v[i].length()<numbers[i]){
+			  v[i]=v[i]+'0';
+		}
+
+	}
+	
+	std::string to_send=v[0];
+
+	for(int j=1;j<v.size();j++){
+
+	to_send+=" "+v[j];
+	}
+	
+	int len= to_send.length();
+	std::cout<<"\n to send :   "<<to_send;
+	std::cout<< "\n  length = "<<len<<"\n";
+	const char* str_ = to_send.c_str();
+
+	
+	fd = serialOpen ("/dev/ttyAMA0", 9600);
+
+	if(fd < 0){
+		}
+	  
+	if (wiringPiSetup () == -1)
+   	 {
+		std::cout<<"\n can't set up wiringpi "; 
+		
+   	//     fprintf (stdout, "Unable to start wiringPi: %s\n",perror (errno)) ;
+   	 }
+	
+	int Size = strlen(str_);
+	std::cout<<"\n char * size = "<<Size;
+//	for(int i=0;i<Size;i++)
+//	{
+//		serialPutchar(fd,*(str_ +i));
+//	}
+	serialFlush (fd) ;
+	serialPuts(fd,str_);
+	//std::cout<<" sent value is : "<<sent; 
+
+	serialClose(fd);
+	sleep(10);
+	
+
+}}
